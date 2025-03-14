@@ -39,7 +39,7 @@ function createLLMToken() {
   token.className = 'llm-token';
   
   const tokenImg = document.createElement('img');
-  tokenImg.src = '/a/40a02e43-58ba-4c2e-ac5b-613243f9bb03';
+  tokenImg.src = '/VariantDark1.png';
   tokenImg.alt = 'WebSim LLM Token';
   
   token.appendChild(tokenImg);
@@ -425,4 +425,3 @@ setInterval(() => {
     });
   }
 }, 10000);
-
