@@ -1,10 +1,14 @@
 import { dictionaryData } from './dictionary-data.js';
 import { promptIdeas } from './prompt-ideas.js';
+import CommunityTracker from './community-tracker.js';
 
 // Initialize WebSocket connection
 const room = new WebsimSocket();
 let clientId = room.party.client.id;
 let username = room.party.client.username;
+
+// Initialize the community tracker
+const communityTracker = new CommunityTracker(room);
 
 // Set creator username
 window.onload = async function() {
@@ -29,98 +33,8 @@ promptContainer.textContent = getRandomPrompt();
 
 generatePromptBtn.addEventListener('click', () => {
   promptContainer.textContent = getRandomPrompt();
-  createLLMToken();
+  communityTracker.createLLMTokenAnimation();
 });
-
-// LLM Tokens Animation
-function createLLMToken() {
-  const tokenContainer = document.getElementById('llm-token-container');
-  const token = document.createElement('div');
-  token.className = 'llm-token';
-  
-  const tokenImg = document.createElement('img');
-  tokenImg.src = '/VariantDark1.png';
-  tokenImg.alt = 'WebSim LLM Token';
-  
-  token.appendChild(tokenImg);
-  
-  // Random position
-  token.style.left = `${Math.random() * 100}%`;
-  
-  tokenContainer.appendChild(token);
-  
-  // Remove token after animation completes
-  setTimeout(() => {
-    token.remove();
-  }, 3000);
-}
-
-// Community Prompt Tracker
-let promptCount = 0;
-const promptTarget = 1000;
-const activeCountEl = document.getElementById('active-count');
-const progressBar = document.getElementById('progress-bar');
-const promptListContainer = document.getElementById('prompt-list-container');
-
-// Simulate initial prompts
-function addRandomPrompts(count) {
-  for (let i = 0; i < count; i++) {
-    const isPremium = Math.random() > 0.6;
-    const modelNames = isPremium ? ['Sonnet 3.7', 'Sonnet 3.5', 'o3-mini overthinking'] 
-                                 : ['Gemini Flash 2.0', 'Gemini Flash 2.0 Thinking', 'Haiku 3.5', 'DeepSeek R1', 'R1 Lite'];
-    const randomModel = modelNames[Math.floor(Math.random() * modelNames.length)];
-    
-    addPromptToTracker({
-      description: getRandomPrompt(),
-      model: randomModel,
-      isPremium: isPremium,
-      username: `user${Math.floor(Math.random() * 999)}`
-    });
-  }
-}
-
-function addPromptToTracker(promptData) {
-  promptCount++;
-  updateProgressBar();
-  
-  const promptEntry = document.createElement('div');
-  promptEntry.className = 'prompt-entry';
-  
-  const promptDesc = document.createElement('div');
-  promptDesc.className = 'prompt-desc';
-  promptDesc.innerHTML = `<strong>${promptData.username}</strong>: ${promptData.description}`;
-  
-  const modelBadge = document.createElement('span');
-  modelBadge.className = `model-badge ${promptData.isPremium ? 'premium' : 'free'}`;
-  modelBadge.textContent = promptData.model;
-  
-  promptEntry.appendChild(promptDesc);
-  promptEntry.appendChild(modelBadge);
-  
-  promptListContainer.insertBefore(promptEntry, promptListContainer.firstChild);
-  
-  // Trim list if getting too long
-  if (promptListContainer.children.length > 30) {
-    promptListContainer.removeChild(promptListContainer.lastChild);
-  }
-
-  // Add to database for persistence
-  room.collection('prompts').create({
-    description: promptData.description,
-    model: promptData.model,
-    isPremium: promptData.isPremium,
-    username: room.party.client.username || 'Anonymous'
-  });
-}
-
-function updateProgressBar() {
-  activeCountEl.textContent = promptCount;
-  const percentage = Math.min((promptCount / promptTarget) * 100, 100);
-  progressBar.style.width = `${percentage}%`;
-}
-
-// Initialize with some random prompts
-addRandomPrompts(15);
 
 // New Prompt Form
 const newPromptForm = document.getElementById('new-prompt-form');
@@ -132,7 +46,7 @@ newPromptForm.addEventListener('submit', (e) => {
   const selectedModel = modelSelect.options[modelSelect.selectedIndex].text;
   const isPremium = modelSelect.options[modelSelect.selectedIndex].parentNode.label === 'Premium';
   
-  addPromptToTracker({
+  communityTracker.addPromptToTracker({
     description: description,
     model: selectedModel,
     isPremium: isPremium,
@@ -143,7 +57,7 @@ newPromptForm.addEventListener('submit', (e) => {
     lastPrompt: description
   });
   
-  createLLMToken();
+  communityTracker.createLLMTokenAnimation();
   
   newPromptForm.reset();
 });
@@ -225,31 +139,11 @@ function updateLeaderboard() {
   // Clear existing entries
   leaderboardList.innerHTML = '';
   
-  // Get all prompts from database
-  const promptsMap = new Map();
-  
-  room.collection('prompts').getList().forEach(prompt => {
-    const username = prompt.username;
-    
-    if (!promptsMap.has(username)) {
-      promptsMap.set(username, {
-        count: 0,
-        premium: 0,
-        free: 0
-      });
-    }
-    
-    const userData = promptsMap.get(username);
-    userData.count++;
-    if (prompt.isPremium) {
-      userData.premium++;
-    } else {
-      userData.free++;
-    }
-  });
+  // Get user activity data from community tracker
+  const userActivity = communityTracker.promptStats.userActivity;
   
   // Convert to array and sort
-  const leaderboardData = [...promptsMap.entries()]
+  const leaderboardData = Object.entries(userActivity)
     .map(([username, data]) => ({
       username,
       count: data.count,
@@ -343,7 +237,7 @@ function addMessage(content, isUser = false) {
   
   // Only create token animation for bot responses
   if (!isUser) {
-    createLLMToken();
+    communityTracker.createLLMTokenAnimation();
   }
 }
 
@@ -391,8 +285,10 @@ addMessage(" Hi there! I'm Gemini Flash 2.0, your WebSim assistant. Ask me anyth
 
 // Subscribe to real-time updates
 room.party.subscribePresence(updateUserPresence);
-room.collection('prompts').subscribe(() => {
-  updateLeaderboard();
+room.collection('prompt_metadata').subscribe((metadata) => {
+  if (metadata.length > 0) {
+    updateLeaderboard();
+  }
 });
 
 // Initialize with presence
@@ -411,20 +307,53 @@ room.onmessage = (event) => {
   }
 };
 
-// Set up periodic actions
-setInterval(() => {
-  // Randomly add a new prompt every 10-20 seconds
-  if (Math.random() < 0.3) {
-    const isPremium = Math.random() > 0.6;
-    const modelNames = isPremium ? ['Sonnet 3.7', 'Sonnet 3.5', 'o3-mini overthinking'] 
-                               : ['Gemini Flash 2.0', 'Gemini Flash 2.0 Thinking', 'Haiku 3.5', 'DeepSeek R1', 'R1 Lite'];
-    const randomModel = modelNames[Math.floor(Math.random() * modelNames.length)];
-    
-    addPromptToTracker({
-      description: getRandomPrompt(),
-      model: randomModel,
-      isPremium: isPremium,
-      username: `user${Math.floor(Math.random() * 999)}`
-    });
+// Add a trends container to prompt tracker section
+const communityTrackerSection = document.getElementById('community-tracker');
+const trendsContainer = document.createElement('div');
+trendsContainer.id = 'trends-container';
+trendsContainer.className = 'trends-container';
+communityTrackerSection.after(trendsContainer);
+
+// Add search functionality to the page
+const promptSearchInput = document.createElement('input');
+promptSearchInput.type = 'text';
+promptSearchInput.id = 'prompt-search';
+promptSearchInput.placeholder = 'Search prompts by keyword...';
+promptSearchInput.className = 'prompt-search';
+
+const promptFilters = document.createElement('div');
+promptFilters.className = 'prompt-filters';
+promptFilters.innerHTML = `
+  <select id="model-filter">
+    <option value="">All Models</option>
+    <option value="Sonnet 3.7">Sonnet 3.7</option>
+    <option value="Gemini Flash 2.0">Gemini Flash 2.0</option>
+    <option value="Haiku 3.5">Haiku 3.5</option>
+    <option value="DeepSeek R1">DeepSeek R1</option>
+  </select>
+  <button id="search-prompts">Search</button>
+`;
+
+// Insert search before prompt list
+document.getElementById('community-tracker').insertAdjacentElement('afterend', promptSearchInput);
+promptSearchInput.insertAdjacentElement('afterend', promptFilters);
+
+// Add search functionality
+document.getElementById('search-prompts').addEventListener('click', async () => {
+  const query = promptSearchInput.value;
+  const modelFilter = document.getElementById('model-filter').value;
+  
+  const results = await communityTracker.searchPrompts(query, {
+    model: modelFilter || undefined,
+    sortBy: 'relevance'
+  });
+  
+  communityTracker.renderPromptList(results);
+});
+
+// Initialize with some random prompts if database is empty
+setTimeout(() => {
+  if (communityTracker.promptCount === 0) {
+    communityTracker.addRandomPrompts(15);
   }
-}, 10000);
+}, 1000);
