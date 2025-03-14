@@ -366,7 +366,7 @@ llmForm.addEventListener('submit', async (e) => {
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant specialized in explaining WebSim features and helping users create better prompts. You are enthusiastic about WebSim and always encourage users to try creating with it. Keep responses brief and focused on WebSim features. You are the Sonnet 3.7 model."
+          content: "You are a helpful assistant specialized in explaining WebSim features and helping users create better prompts. You are enthusiastic about WebSim and always encourage users to try creating with it. Keep responses brief and focused on WebSim features. You are the Gemini Flash 2.0 model."
         },
         ...conversationHistory,
       ],
@@ -384,7 +384,7 @@ llmForm.addEventListener('submit', async (e) => {
 });
 
 // Add a welcome message
-addMessage("👋 Hi there! I'm Sonnet 3.7, your WebSim assistant. Ask me anything about creating with WebSim!");
+addMessage(" Hi there! I'm Gemini Flash 2.0, your WebSim assistant. Ask me anything about creating with WebSim!");
 
 // Subscribe to real-time updates
 room.party.subscribePresence(updateUserPresence);

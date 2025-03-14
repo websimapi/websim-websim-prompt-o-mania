@@ -502,8 +502,8 @@ input, select {
 }
 
 .message.bot {
-  background-color: var(--primary-color);
-  color: white;
+  background-color: var(--free-color);
+  color: #333;
   align-self: flex-start;
 }
 
@@ -572,4 +572,3 @@ footer a:hover {
     grid-template-columns: 2fr 1fr 1fr;
   }
 }
-
