@@ -341,7 +341,10 @@ function addMessage(content, isUser = false) {
   llmMessages.appendChild(messageEl);
   llmMessages.scrollTop = llmMessages.scrollHeight;
   
-  createLLMToken();
+  // Only create token animation for bot responses
+  if (!isUser) {
+    createLLMToken();
+  }
 }
 
 llmForm.addEventListener('submit', async (e) => {
