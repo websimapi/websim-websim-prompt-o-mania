@@ -1,0 +1,183 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSim Prompt-o-Mania</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom": "https://esm.sh/react-dom@18.2.0"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <img src="/a/40a02e43-58ba-4c2e-ac5b-613243f9bb03" alt="WebSim Logo" class="websim-logo">
+      <h1>WebSim Prompt-o-Mania</h1>
+      <p>Keep the creativity flowing! Always have at least one WebSim prompt spinning!</p>
+    </header>
+
+    <div class="token-display">
+      <div class="token premium">
+        <div class="token-inner">
+          <img src="/a/40a02e43-58ba-4c2e-ac5b-613243f9bb03" alt="WebSim Premium Token" class="token-img">
+        </div>
+        <p>Premium Token</p>
+      </div>
+      <div class="token free">
+        <div class="token-inner">
+          <img src="/a/40a02e43-58ba-4c2e-ac5b-613243f9bb03" alt="WebSim Free Token" class="token-img">
+        </div>
+        <p>Free Token</p>
+      </div>
+      <div id="llm-token-container" class="token-animations">
+        <!-- LLM tokens will be added here -->
+      </div>
+    </div>
+
+    <section id="prompt-ideas" class="section">
+      <h2>Random Prompt Ideas</h2>
+      <div id="prompt-container">Loading prompt ideas...</div>
+      <button id="generate-prompt">Generate New Prompt</button>
+    </section>
+
+    <section id="models-section" class="section">
+      <h2>Available Models</h2>
+      <div class="models-container">
+        <div class="model-category">
+          <h3>Free Models</h3>
+          <ul id="free-models-list">
+            <li>Gemini Flash 2.0</li>
+            <li>Gemini Flash 2.0 Thinking</li>
+            <li>Haiku 3.5</li>
+            <li>DeepSeek R1</li>
+            <li>R1 Lite</li>
+          </ul>
+        </div>
+        <div class="model-category">
+          <h3>Premium Models</h3>
+          <ul id="premium-models-list">
+            <li class="highlighted">Sonnet 3.7</li>
+            <li>Sonnet 3.5</li>
+            <li>o3-mini overthinking</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="prompt-tracker" class="section">
+      <h2>Community Prompt Tracker</h2>
+      <div id="community-tracker">
+        <div class="tracker-header">
+          <span>Current active prompts: <span id="active-count">0</span></span>
+          <span>Community target: <span id="prompt-target">1000</span></span>
+        </div>
+        <div class="progress-container">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+      </div>
+      <div id="prompt-list-container"></div>
+    </section>
+
+    <section id="leaderboard" class="section">
+      <h2>Prompt Champions</h2>
+      <div id="leaderboard-container">
+        <div class="leaderboard-header">
+          <span>Username</span>
+          <span>Prompts Created</span>
+          <span>Total Credit</span>
+        </div>
+        <div id="leaderboard-list"></div>
+      </div>
+    </section>
+
+    <section id="prompt-form" class="section">
+      <h2>Track Your Prompt</h2>
+      <form id="new-prompt-form">
+        <div class="form-group">
+          <label for="prompt-description">What are you prompting?</label>
+          <input type="text" id="prompt-description" required placeholder="E.g., A text adventure game about space pirates">
+        </div>
+        <div class="form-group">
+          <label for="model-select">Which model?</label>
+          <select id="model-select" required>
+            <optgroup label="Premium">
+              <option value="sonnet3.7">Sonnet 3.7</option>
+              <option value="sonnet3.5">Sonnet 3.5</option>
+              <option value="o3-mini">o3-mini overthinking</option>
+            </optgroup>
+            <optgroup label="Free">
+              <option value="gemini-flash">Gemini Flash 2.0</option>
+              <option value="gemini-flash-thinking">Gemini Flash 2.0 Thinking</option>
+              <option value="haiku">Haiku 3.5</option>
+              <option value="deepseek">DeepSeek R1</option>
+              <option value="r1-lite">R1 Lite</option>
+            </optgroup>
+          </select>
+        </div>
+        <button type="submit" id="submit-prompt">Add My Prompt</button>
+      </form>
+    </section>
+
+    <section id="dictionary-section" class="section">
+      <h2>WebSim Dictionary</h2>
+      <div class="dictionary-search">
+        <input type="text" id="dictionary-search" placeholder="Search the dictionary...">
+      </div>
+      <div id="dictionary-entries"></div>
+      <div id="dictionary-pagination"></div>
+    </section>
+
+    <section id="tips-section" class="section">
+      <h2>Pro Tips for WebSim Prompting</h2>
+      <div id="tips-container">
+        <div class="tip">
+          <h3>Be Specific</h3>
+          <p>The more details you provide in your prompt, the better the results will be. Specify colors, styles, functionality, and purpose.</p>
+        </div>
+        <div class="tip">
+          <h3>Use References</h3>
+          <p>Upload reference images or link to examples to help guide the AI in creating what you want.</p>
+        </div>
+        <div class="tip">
+          <h3>Iterate</h3>
+          <p>Don't expect perfection on the first try. Use the results to refine your prompt and try again.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="user-presence-section" class="section">
+      <h2>Who's Here</h2>
+      <div id="presence-container"></div>
+    </section>
+  </div>
+
+  <div id="llm-chat-container">
+    <div id="llm-chat-header">
+      <h3>Ask about WebSim</h3>
+      <button id="toggle-llm-chat">↕️</button>
+    </div>
+    <div id="llm-chat-body">
+      <div id="llm-messages"></div>
+      <form id="llm-form">
+        <input type="text" id="llm-input" placeholder="Ask me anything about WebSim...">
+        <button type="submit" id="llm-submit">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <p>WebSim Prompt-o-Mania is a fan-made site. Visit <a href="https://websim.ai" target="_blank">WebSim.ai</a> to start creating!</p>
+    <p>Created by <span id="creator-username">WebSim enthusiast</span></p>
+  </footer>
+
+  <script src="dictionary-data.js" type="module"></script>
+  <script src="prompt-ideas.js" type="module"></script>
+  <script src="app.js" type="module"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
